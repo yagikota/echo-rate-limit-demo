@@ -69,6 +69,7 @@ func main() {
 	}
 	var response Response
 
+	start := time.Now()
 	for i := 0; i < 20; i++ {
 		res, err := c.Client.Do(req)
 		if err != nil {
@@ -81,8 +82,9 @@ func main() {
 			fmt.Println(err.Error())
 			return
 		}
-		time.Sleep(time.Millisecond * 100)
-		fmt.Println(i+1, response, res.StatusCode, time.Now())
-	}
 
+		time.Sleep(time.Millisecond * 100)
+
+		fmt.Println(i+1, response, res.StatusCode, time.Since(start).Seconds())
+	}
 }
