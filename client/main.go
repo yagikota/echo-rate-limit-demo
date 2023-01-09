@@ -67,24 +67,59 @@ func main() {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	var response Response
 
-	start := time.Now()
-	for i := 0; i < 20; i++ {
-		res, err := c.Client.Do(req)
-		if err != nil {
-			fmt.Println(err.Error())
-			fmt.Println(res.StatusCode)
+	ticker := time.NewTicker(time.Millisecond * 1000)
+	defer ticker.Stop()
+	done := make(chan bool)
+	go func() {
+		time.Sleep(90 * time.Second)
+		done <- true
+	}()
+	i := 1
+	for {
+		select {
+		case <-done:
+			fmt.Println("Done!")
 			return
+		case t := <-ticker.C:
+			HTTPRequest(c, req, t, i)
+			i += 1
 		}
-
-		if err := decodeBody(res, &response); err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		time.Sleep(time.Millisecond * 100)
-
-		fmt.Println(i+1, response, res.StatusCode, time.Since(start).Seconds())
 	}
+
+	// for i := 0; i < 90; i++ {
+	// 	// res, err := c.Client.Do(req)
+	// 	// if err != nil {
+	// 	// 	fmt.Println(err.Error())
+	// 	// 	fmt.Println(res.StatusCode)
+	// 	// 	return
+	// 	// }
+
+	// 	// if err := decodeBody(res, &response); err != nil {
+	// 	// 	fmt.Println(err.Error())
+	// 	// 	return
+	// 	// }
+	// 	go HTTPRequest(c, req, start, i)
+
+	// 	// if i == 29 || i == 59 {
+	// 	// 	time.Sleep(time.Second * 30)
+	// 	// }
+	// 	time.Sleep(time.Second * 1)
+	// }
+}
+
+func HTTPRequest(c *RLClient, req *http.Request, t time.Time, i int) {
+	var response Response
+	res, err := c.Client.Do(req)
+	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println(res.StatusCode)
+		return
+	}
+
+	if err := decodeBody(res, &response); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println(i, response, res.StatusCode, t)
 }
